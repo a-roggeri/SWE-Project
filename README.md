@@ -2,7 +2,7 @@
 
 ## Descrizione del Progetto
 
-Il progetto **TOKYOGROUP** è un'applicazione web sviluppata nell'ambito di un corso di Ingegneria del Software, con lo scopo di gestire gli appuntamenti di un negozio di parrucchieri. L'applicazione è stata realizzata utilizzando Java, un database H2, e l'ambiente di sviluppo Eclipse.
+Il progetto **TOKYOGROUP** è un'applicazione sviluppata nell'ambito di un corso di Ingegneria del Software, con lo scopo di gestire gli appuntamenti di un negozio di parrucchieri. L'applicazione è stata realizzata utilizzando Java, un database H2, e l'ambiente di sviluppo Eclipse.
 
 **Funzionalità principali:**
 
