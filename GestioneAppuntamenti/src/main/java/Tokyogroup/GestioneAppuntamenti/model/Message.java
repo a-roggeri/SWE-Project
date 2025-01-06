@@ -1,4 +1,4 @@
-package Tokyogroup.GestioneAppuntamentiBarbiere.model;
+package Tokyogroup.GestioneAppuntamenti.model;
 
 /**
  * Classe che rappresenta un Messaggio.

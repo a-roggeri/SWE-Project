@@ -1,4 +1,4 @@
-package Tokyogroup.GestioneAppuntamentiBarbiere.controller;
+package Tokyogroup.GestioneAppuntamenti.controller;
 
 import Tokyogroup.GestioneAppuntamenti.model.MessageDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;

@@ -1,4 +1,4 @@
-package Tokyogroup.GestioneAppuntamentiBarbiere.view;
+package Tokyogroup.GestioneAppuntamenti.view;
 
 import Tokyogroup.GestioneAppuntamenti.controller.MessageController;
 import Tokyogroup.GestioneAppuntamenti.model.User;
