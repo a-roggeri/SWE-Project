@@ -23,7 +23,7 @@ public class ChangePasswordController {
      */
     public ChangePasswordController(User user) {
         this.user = user;
-        this.userDAO = new UserDAO();
+        this.userDAO = UserDAO.getInstance();
         logger.info("ChangePasswordController creato per l'utente: {}", user.getUsername());
     }
 
