@@ -23,7 +23,7 @@ public class ViewMessagesController {
      * @param managerId l'ID del manager.
      */
     public ViewMessagesController(int managerId) {
-        this.messageDAO = new MessageDAO();
+        this.messageDAO = MessageDAO.getInstance();
         this.managerId = managerId;
         logger.info("Inizializzato ViewMessagesController con manager ID: {}", managerId);
     }
