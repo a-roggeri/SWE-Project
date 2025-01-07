@@ -22,7 +22,7 @@ public class WeeklyAppointmentsController {
      * @param currentHairdresser Il parrucchiere corrente.
      */
     public WeeklyAppointmentsController(User currentHairdresser) {
-        this.appointmentDAO = new AppointmentDAO();
+        this.appointmentDAO = AppointmentDAO.getInstance();
         this.currentHairdresser = currentHairdresser;
     }
 

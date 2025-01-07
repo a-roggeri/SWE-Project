@@ -24,7 +24,7 @@ public class MessageController {
      */
     public MessageController(User user) {
         this.user = user;
-        this.messageDAO = new MessageDAO();
+        this.messageDAO = MessageDAO.getInstance();
         logger.info("MessageController inizializzato per l'utente: {}", user.getUsername());
     }
 
