@@ -31,7 +31,7 @@ public class CreateAppointmentController {
      * @param currentHairdresser L'attuale parrucchiere.
      */
     public CreateAppointmentController(User currentHairdresser) {
-        this.appointmentDAO = new AppointmentDAO();
+        this.appointmentDAO = AppointmentDAO.getInstance();
         this.serviceDAO = new ServiceDAO();
         this.currentHairdresser = currentHairdresser;
 
