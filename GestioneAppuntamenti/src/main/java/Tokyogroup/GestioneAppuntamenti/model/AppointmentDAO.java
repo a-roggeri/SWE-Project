@@ -19,7 +19,7 @@ public class AppointmentDAO {
 	 * Costruttore privato della classe AppointmentDAO.
 	 * Inizializza un'istanza per la gestione degli appuntamenti.
 	 */
-	private AppointmentDAO() {
+	protected AppointmentDAO() {
 		// Costruttore vuoto
 	}
 
