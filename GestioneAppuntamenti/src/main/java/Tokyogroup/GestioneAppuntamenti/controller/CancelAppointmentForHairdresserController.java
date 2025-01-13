@@ -27,7 +27,7 @@ public class CancelAppointmentForHairdresserController {
      * @param currentHairdresser Il parrucchiere attualmente loggato.
      */
     public CancelAppointmentForHairdresserController(User currentHairdresser) {
-        this.appointmentDAO = new AppointmentDAO();
+        this.appointmentDAO = AppointmentDAO.getInstance();
         this.currentHairdresser = currentHairdresser;
         logger.info("CancelAppointmentForHairdresserController inizializzato per il parrucchiere ID: {}",
                 currentHairdresser.getId());
