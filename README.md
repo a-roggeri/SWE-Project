@@ -23,7 +23,7 @@ Il progetto **Barber Shop** è un'applicazione sviluppata nell'ambito del corso 
 
 ## Struttura del Progetto
 
-* **Backend:** Gestisce la logica dell'applicazione, l'interazione con il database e le API REST.
+* **Backend:** Gestisce la logica dell'applicazione e l'interazione con il database.
 * **Frontend:** Fornisce l'interfaccia utente per l'interazione con l'applicazione.
 * **Database:** Memorizza i dati degli utenti, degli appuntamenti e dei servizi.
 
