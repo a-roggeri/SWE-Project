@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Classe per la gestione del database.
@@ -24,7 +26,7 @@ public class DatabaseManager {
     public DatabaseManager() {
         // Costruttore vuoto
     }
-    
+
     /**
      * Ottiene una connessione al database.
      *
@@ -147,6 +149,57 @@ public class DatabaseManager {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new SQLException("Errore durante l'aggiornamento degli appuntamenti passati", e);
+        }
+    }
+
+    /**
+     * Crea una copia del database attuale chiamandola DatabaseBackup.
+     * Se esiste già un database di backup, lo sovrascrive.
+     * Se non esiste un database originale, ritorna errore.
+     *
+     * @throws SQLException se si verifica un errore durante la copia del database
+     */
+    public static void backupDatabase() throws SQLException {
+        File originalDb = new File(DB_PATH + ".mv.db");
+        File backupDb = new File("./resources/data/DatabaseBackup.mv.db");
+
+        if (!originalDb.exists()) {
+            throw new SQLException("Database originale non trovato.");
+        }
+
+        try {
+            if (backupDb.exists()) {
+                backupDb.delete();
+            }
+            Files.copy(originalDb.toPath(), backupDb.toPath());
+        } catch (IOException e) {
+            throw new SQLException("Errore durante la creazione del backup del database.", e);
+        }
+    }
+
+    /**
+     * Sovrascrive il database attuale con il database di backup.
+     * Se non esiste un database di backup, ritorna errore.
+     * Se esiste già un database originale, lo sovrascrive.
+     *
+     * @throws SQLException se si verifica un errore durante il ripristino del
+     *                      database
+     */
+    public static void restoreDatabase() throws SQLException {
+        File originalDb = new File(DB_PATH + ".mv.db");
+        File backupDb = new File("./resources/data/DatabaseBackup.mv.db");
+
+        if (!backupDb.exists()) {
+            throw new SQLException("Database di backup non trovato.");
+        }
+
+        try {
+            if (originalDb.exists()) {
+                originalDb.delete();
+            }
+            Files.copy(backupDb.toPath(), originalDb.toPath());
+        } catch (IOException e) {
+            throw new SQLException("Errore durante il ripristino del database dal backup.", e);
         }
     }
 }
