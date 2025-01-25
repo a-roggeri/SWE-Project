@@ -1,8 +1,12 @@
 package Tokyogroup.GestioneAppuntamenti.controller;
 import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
 import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 import org.junit.jupiter.api.*;
+
+import java.io.IOException;
 import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,8 +16,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ChangePasswordControllerTest {
 
-    private ChangePasswordController changePasswordController;
-    private User currentUser;
+	private ChangePasswordController User;
+    private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
     @BeforeAll
     static void backupDatabase() throws Exception {
@@ -25,8 +31,17 @@ class ChangePasswordControllerTest {
         DatabaseManager.deleteDatabaseFiles();
         DatabaseManager.initializeDatabase();
 
-        currentUser = new User(1, "user", "oldPassword", "USER", true);
-        changePasswordController = new ChangePasswordController(currentUser);
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new ChangePasswordController(testUser);
     }
 
     @AfterEach
@@ -36,38 +51,23 @@ class ChangePasswordControllerTest {
 
     @Test
     void testChangePasswordSuccess() throws SQLException {
-        UserDAO userDAO = UserDAO.getInstance();
-        userDAO.addUser(currentUser);
-
-        boolean success = changePasswordController.changePassword("oldPassword", "newPassword");
+        boolean success = User.changePassword("password", "newPassword");
         assertTrue(success);
-
-        User updatedUser = userDAO.getUserById(currentUser.getId());
-        assertEquals("newPassword", updatedUser.getPassword());
+        assertNotNull(userDAO.findUser("testUser", "newPassword"));
     }
 
     @Test
     void testChangePasswordFailure() throws SQLException {
-        UserDAO userDAO = UserDAO.getInstance();
-        userDAO.addUser(currentUser);
-
-        boolean success = changePasswordController.changePassword("wrongOldPassword", "newPassword");
+        boolean success = User.changePassword("wrongOldPassword", "newPassword");
         assertFalse(success);
-
-        User updatedUser = userDAO.getUserById(currentUser.getId());
-        assertEquals("oldPassword", updatedUser.getPassword());
+        assertNull(userDAO.findUser("testUser", "newPassword"));
     }
 
     @Test
-    void testChangePasswordSQLException() throws SQLException {
-        UserDAO userDAO = UserDAO.getInstance();
-        userDAO.addUser(currentUser);
-
-        // Simulate SQLException by closing the database connection
-        DatabaseManager.closeConnection();
-
+    void testChangePasswordSQLException() throws SQLException, IOException {
+        DatabaseManager.deleteDatabaseFiles();
         assertThrows(RuntimeException.class, () -> {
-            changePasswordController.changePassword("oldPassword", "newPassword");
+        	User.changePassword("password", "newPassword");
         });
     }
 }

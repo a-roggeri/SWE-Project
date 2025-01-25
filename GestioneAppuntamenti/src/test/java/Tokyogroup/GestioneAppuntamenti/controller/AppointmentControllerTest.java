@@ -3,6 +3,8 @@ import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
 import Tokyogroup.GestioneAppuntamenti.model.Service;
 import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
+
 import org.junit.jupiter.api.*;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,9 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AppointmentControllerTest {
 
-    private AppointmentController appointmentController;
+    private AppointmentController User;
+    private AppointmentController Hairdresser;
     private User testUser;
-    private User hairdresser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
     @BeforeAll
     static void backupDatabase() throws Exception {
@@ -28,9 +32,17 @@ class AppointmentControllerTest {
         DatabaseManager.initializeDatabase();
 
         testUser = new User(1, "testUser", "password", "CLIENTE", true);
-        hairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
-
-        appointmentController = new AppointmentController(testUser);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new AppointmentController(testUser);
+        Hairdresser = new AppointmentController(testHairdresser);
     }
 
     @AfterEach
@@ -40,44 +52,42 @@ class AppointmentControllerTest {
 
     @Test
     void testGetCurrentUser() {
-        User currentUser = appointmentController.getCurrentUser();
+        User currentUser = User.getCurrentUser();
         assertEquals(testUser, currentUser);
     }
 
     @Test
     void testGetAvailableHairdressers() {
-        List<User> hairdressers = appointmentController.getAvailableHairdressers();
+        List<User> hairdressers = User.getAvailableHairdressers();
         assertNotNull(hairdressers);
         assertFalse(hairdressers.isEmpty());
     }
 
     @Test
     void testGetServicesForHairdresser() {
-        ServiceDAO sDAO = new ServiceDAO();  
-        sDAO.addService(new Service(4, "Taglio", 10));
-        sDAO.addServiceToHairdresser(2, 4);
-        List<Service> services = appointmentController.getServicesForHairdresser(hairdresser);
+        
+        List<Service> services = Hairdresser.getServicesForHairdresser(testHairdresser);
         assertNotNull(services);
         assertFalse(services.isEmpty());
     }
 
     @Test
     void testGetAvailableHours() {
-        List<String> availableHours = appointmentController.getAvailableHours(2, "2023-10-10");
+        List<String> availableHours = User.getAvailableHours(2, "2025-10-10");
         assertNotNull(availableHours);
         assertFalse(availableHours.isEmpty());
     }
 
     @Test
     void testBookAppointment() {
-        List<String> selectedServices = List.of("Taglio", "Colore");
-        boolean success = appointmentController.bookAppointment(2, "2023-10-10", "10:00", selectedServices);
+        List<String> selectedServices = List.of("Taglio", "Piega");
+        boolean success = User.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
         assertTrue(success);
     }
 
     @Test
     void testIsDateTimeValid() {
-        assertTrue(appointmentController.isDateTimeValid("2025-10-10", "10:00"));
-        assertFalse(appointmentController.isDateTimeValid("2020-10-10", "10:00"));
+        assertTrue(User.isDateTimeValid("2025-10-10", "10:00"));
+        assertFalse(User.isDateTimeValid("2020-10-10", "10:00"));
     }
 }

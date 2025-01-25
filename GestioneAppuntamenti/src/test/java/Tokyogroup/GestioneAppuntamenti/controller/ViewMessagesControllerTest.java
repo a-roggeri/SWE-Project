@@ -1,17 +1,24 @@
+package Tokyogroup.GestioneAppuntamenti.controller;
 import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
 import Tokyogroup.GestioneAppuntamenti.model.Message;
 import Tokyogroup.GestioneAppuntamenti.model.MessageDAO;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
+import Tokyogroup.GestioneAppuntamenti.model.User;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
+
 import org.junit.jupiter.api.*;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
-package Tokyogroup.GestioneAppuntamenti.controller;
 
 
 class ViewMessagesControllerTest {
 
-    private ViewMessagesController viewMessagesController;
-    private int managerId;
+    private ViewMessagesController Hairdresser;
+    private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
     @BeforeAll
     static void backupDatabase() throws Exception {
@@ -22,8 +29,18 @@ class ViewMessagesControllerTest {
     void setUp() throws Exception {
         DatabaseManager.deleteDatabaseFiles();
         DatabaseManager.initializeDatabase();
-        managerId = 1; // Assumendo che il manager con ID 1 esista nel database
-        viewMessagesController = new ViewMessagesController(managerId);
+
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        Hairdresser = new ViewMessagesController(2);
     }
 
     @AfterEach
@@ -33,24 +50,27 @@ class ViewMessagesControllerTest {
 
     @Test
     void testGetUnreadMessages() {
-        List<Message> unreadMessages = viewMessagesController.getUnreadMessages();
+    	MessageController userTmp = new MessageController(testUser);
+    	userTmp.sendMessage(2, "Test message");
+        List<Message> unreadMessages = Hairdresser.getUnreadMessages();
         assertNotNull(unreadMessages);
         // Aggiungi ulteriori asserzioni se necessario, ad esempio controllando il numero di messaggi non letti
     }
 
     @Test
     void testMarkMessageAsRead() {
-        // Assumendo che ci sia almeno un messaggio non letto per il manager con ID 1
-        List<Message> unreadMessages = viewMessagesController.getUnreadMessages();
+    	MessageController userTmp = new MessageController(testUser);
+    	userTmp.sendMessage(2, "Test message");
+        List<Message> unreadMessages = Hairdresser.getUnreadMessages();
         assertFalse(unreadMessages.isEmpty());
 
         int messageId = unreadMessages.get(0).getId();
-        boolean success = viewMessagesController.markMessageAsRead(messageId);
+        boolean success = Hairdresser.markMessageAsRead(messageId);
         assertTrue(success);
 
         // Verifica che il messaggio sia stato segnato come letto
         MessageDAO messageDAO = MessageDAO.getInstance();
-        Message message = messageDAO.getMessageById(messageId);
-        assertEquals("LETTO", message.getStatus());
+        List<Message> message = messageDAO.getUnreadMessages(2);
+        assertTrue(message.isEmpty());
     }
 }

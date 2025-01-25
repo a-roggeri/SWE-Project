@@ -1,17 +1,21 @@
+package Tokyogroup.GestioneAppuntamenti.controller;
 import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
 import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 import org.junit.jupiter.api.*;
 import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
-package Tokyogroup.GestioneAppuntamenti.controller;
 
 
 class LoginControllerTest {
 
-    private LoginController loginController;
+	private LoginController User;
     private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
     @BeforeAll
     static void backupDatabase() throws Exception {
@@ -23,9 +27,17 @@ class LoginControllerTest {
         DatabaseManager.deleteDatabaseFiles();
         DatabaseManager.initializeDatabase();
 
-        loginController = new LoginController();
         testUser = new User(1, "testUser", "password", "CLIENTE", true);
-        UserDAO.getInstance().createUser(testUser);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new LoginController();
     }
 
     @AfterEach
@@ -35,62 +47,62 @@ class LoginControllerTest {
 
     @Test
     void testAuthenticateSuccess() {
-        User user = loginController.authenticate("testUser", "password");
+        User user = User.authenticate("testUser", "password");
         assertNotNull(user);
         assertEquals("testUser", user.getUsername());
     }
 
     @Test
     void testAuthenticateFailure() {
-        User user = loginController.authenticate("testUser", "wrongPassword");
+        User user = User.authenticate("testUser", "wrongPassword");
         assertNull(user);
     }
 
     @Test
     void testAuthenticateEmptyUsername() {
         assertThrows(IllegalArgumentException.class, () -> {
-            loginController.authenticate("", "password");
+        	User.authenticate("", "password");
         });
     }
 
     @Test
     void testAuthenticateEmptyPassword() {
         assertThrows(IllegalArgumentException.class, () -> {
-            loginController.authenticate("testUser", "");
+        	User.authenticate("testUser", "");
         });
     }
 
     @Test
     void testRestoreAccountSuccess() throws SQLException {
-        boolean success = loginController.restoreAccount(testUser);
+        boolean success = User.restoreAccount(testUser);
         assertTrue(success);
     }
 
     @Test
     void testRestoreAccountFailure() throws SQLException {
         User nonExistentUser = new User(999, "nonExistentUser", "password", "CLIENTE", true);
-        boolean success = loginController.restoreAccount(nonExistentUser);
+        boolean success = User.restoreAccount(nonExistentUser);
         assertFalse(success);
     }
 
     @Test
     void testHandleSuccessfulLogin() {
         assertDoesNotThrow(() -> {
-            loginController.handleSuccessfulLogin(testUser);
+        	User.handleSuccessfulLogin(testUser);
         });
     }
 
     @Test
     void testHandleFailedLogin() {
         assertThrows(RuntimeException.class, () -> {
-            loginController.handleFailedLogin("testUser");
+        	User.handleFailedLogin("testUser");
         });
     }
 
     @Test
     void testOpenRegistration() {
         assertDoesNotThrow(() -> {
-            loginController.openRegistration();
+        	User.openRegistration();
         });
     }
 }

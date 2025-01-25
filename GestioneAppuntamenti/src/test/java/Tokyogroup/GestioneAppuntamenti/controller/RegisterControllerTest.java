@@ -1,15 +1,23 @@
+package Tokyogroup.GestioneAppuntamenti.controller;
 import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
+import Tokyogroup.GestioneAppuntamenti.model.User;
 import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-package Tokyogroup.GestioneAppuntamenti.controller;
+import java.io.IOException;
+
 
 
 
 class RegisterControllerTest {
 
-    private RegisterController registerController;
+	private RegisterController User;
+    private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
     @BeforeAll
     static void backupDatabase() throws Exception {
@@ -20,7 +28,18 @@ class RegisterControllerTest {
     void setUp() throws Exception {
         DatabaseManager.deleteDatabaseFiles();
         DatabaseManager.initializeDatabase();
-        registerController = new RegisterController();
+
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new RegisterController();
     }
 
     @AfterEach
@@ -30,36 +49,35 @@ class RegisterControllerTest {
 
     @Test
     void testRegisterUserSuccess() {
-        boolean result = registerController.registerUser("newuser", "password", "CLIENTE");
+        boolean result = User.registerUser("newuser", "password", "CLIENTE");
         assertTrue(result);
     }
 
     @Test
     void testRegisterUserWithEmptyFields() {
         assertThrows(IllegalArgumentException.class, () -> {
-            registerController.registerUser("", "password", "CLIENTE");
+        	User.registerUser("", "password", "CLIENTE");
         });
         assertThrows(IllegalArgumentException.class, () -> {
-            registerController.registerUser("newuser", "", "CLIENTE");
+        	User.registerUser("newuser", "", "CLIENTE");
         });
     }
 
     @Test
     void testRegisterUserWithNullFields() {
         assertThrows(IllegalArgumentException.class, () -> {
-            registerController.registerUser(null, "password", "CLIENTE");
+        	User.registerUser(null, "password", "CLIENTE");
         });
         assertThrows(IllegalArgumentException.class, () -> {
-            registerController.registerUser("newuser", null, "CLIENTE");
+        	User.registerUser("newuser", null, "CLIENTE");
         });
     }
 
     @Test
-    void testRegisterUserDatabaseError() {
-        UserDAO userDAO = UserDAO.getInstance();
-        userDAO.closeConnection(); // Simulate database error
+    void testRegisterUserDatabaseError() throws IOException {
+        DatabaseManager.deleteDatabaseFiles();
         assertThrows(RuntimeException.class, () -> {
-            registerController.registerUser("newuser", "password", "CLIENTE");
+        	User.registerUser("newuser", "password", "CLIENTE");
         });
     }
 }

@@ -1,19 +1,26 @@
-import Tokyogroup.GestioneAppuntamenti.model.AppointmentDAO;
+package Tokyogroup.GestioneAppuntamenti.controller;
 import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
+
 import org.junit.jupiter.api.*;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
-package Tokyogroup.GestioneAppuntamenti.controller;
 
 
 class WeeklyAppointmentsControllerTest {
 
-    private WeeklyAppointmentsController weeklyAppointmentsController;
-    private User currentHairdresser;
+	private AppointmentController User;
+    private WeeklyAppointmentsController Hairdresser;
+    private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
     @BeforeAll
     static void backupDatabase() throws Exception {
@@ -25,8 +32,18 @@ class WeeklyAppointmentsControllerTest {
         DatabaseManager.deleteDatabaseFiles();
         DatabaseManager.initializeDatabase();
 
-        currentHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
-        weeklyAppointmentsController = new WeeklyAppointmentsController(currentHairdresser);
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new AppointmentController(testUser);
+        Hairdresser = new WeeklyAppointmentsController(testHairdresser);
     }
 
     @AfterEach
@@ -36,14 +53,16 @@ class WeeklyAppointmentsControllerTest {
 
     @Test
     void testGetWeeklyAppointments() {
-        Map<Integer, List<String[]>> weeklyAppointments = weeklyAppointmentsController.getWeeklyAppointments();
+    	List<String> selectedServices = List.of("Taglio", "Piega");
+        User.bookAppointment(2, LocalDate.now().getYear() + "-" + LocalDate.now().getMonthValue() + "-" + (LocalDate.now().getDayOfMonth() + 1), "11:00", selectedServices);
+        Map<Integer, List<String[]>> weeklyAppointments = Hairdresser.getWeeklyAppointments();
         assertNotNull(weeklyAppointments);
         assertFalse(weeklyAppointments.isEmpty());
     }
 
     @Test
     void testCalculateWeeklyRevenue() {
-        double revenue = weeklyAppointmentsController.calculateWeeklyRevenue();
+        double revenue = Hairdresser.calculateWeeklyRevenue();
         assertTrue(revenue >= 0);
     }
 }
