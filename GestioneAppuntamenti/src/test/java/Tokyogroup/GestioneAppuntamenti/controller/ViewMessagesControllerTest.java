@@ -54,7 +54,6 @@ class ViewMessagesControllerTest {
     	userTmp.sendMessage(2, "Test message");
         List<Message> unreadMessages = Hairdresser.getUnreadMessages();
         assertNotNull(unreadMessages);
-        // Aggiungi ulteriori asserzioni se necessario, ad esempio controllando il numero di messaggi non letti
     }
 
     @Test
@@ -68,7 +67,6 @@ class ViewMessagesControllerTest {
         boolean success = Hairdresser.markMessageAsRead(messageId);
         assertTrue(success);
 
-        // Verifica che il messaggio sia stato segnato come letto
         MessageDAO messageDAO = MessageDAO.getInstance();
         List<Message> message = messageDAO.getUnreadMessages(2);
         assertTrue(message.isEmpty());
