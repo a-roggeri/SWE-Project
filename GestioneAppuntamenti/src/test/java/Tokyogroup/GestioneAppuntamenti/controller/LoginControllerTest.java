@@ -6,6 +6,7 @@ import Tokyogroup.GestioneAppuntamenti.model.User;
 import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 import org.junit.jupiter.api.*;
 import java.sql.SQLException;
+import java.awt.GraphicsEnvironment;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -87,6 +88,10 @@ class LoginControllerTest {
 
     @Test
     void testHandleSuccessfulLogin() {
+    	if (GraphicsEnvironment.isHeadless()) {
+    	    System.out.println("Test ignorato in ambiente headless");
+    	    return;
+    	}
         assertDoesNotThrow(() -> {
         	User.handleSuccessfulLogin(testUser);
         });
@@ -101,6 +106,10 @@ class LoginControllerTest {
 
     @Test
     void testOpenRegistration() {
+    	if (GraphicsEnvironment.isHeadless()) {
+    	    System.out.println("Test ignorato in ambiente headless");
+    	    return;
+    	}
         assertDoesNotThrow(() -> {
         	User.openRegistration();
         });
