@@ -1,4 +1,4 @@
-# Database Salone di Bellezza
+# Database Barbiere Tokyogroup
 
 ## Clienti
 | User         | Password    |
