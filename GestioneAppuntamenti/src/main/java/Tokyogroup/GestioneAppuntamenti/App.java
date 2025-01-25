@@ -68,7 +68,6 @@ public class App {
      */
     public static void main(String[] args) {
         logger.info("Avvio dell'applicazione...");
-
         try {
             DatabaseManager.initializeDatabase();
             logger.info("Database inizializzato con successo.");

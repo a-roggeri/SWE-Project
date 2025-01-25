@@ -6,6 +6,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.apache.commons.io.FileUtils;
+
 import java.io.IOException;
 import java.nio.file.Files;
 
@@ -157,24 +160,12 @@ public class DatabaseManager {
      * Se esiste già un database di backup, lo sovrascrive.
      * Se non esiste un database originale, ritorna errore.
      *
-     * @throws SQLException se si verifica un errore durante la copia del database
+     * @throws IOException se si verifica un errore durante il backup del
+     *                      database 
      */
-    public static void backupDatabase() throws SQLException {
-        File originalDb = new File(DB_PATH + ".mv.db");
-        File backupDb = new File("./resources/data/DatabaseBackup.mv.db");
-
-        if (!originalDb.exists()) {
-            throw new SQLException("Database originale non trovato.");
-        }
-
-        try {
-            if (backupDb.exists()) {
-                backupDb.delete();
-            }
-            Files.copy(originalDb.toPath(), backupDb.toPath());
-        } catch (IOException e) {
-            throw new SQLException("Errore durante la creazione del backup del database.", e);
-        }
+    public static void backupDatabase() throws IOException {
+        FileUtils.copyFile(new File(DB_PATH + ".mv.db"), new File("./resources/data/DatabaseBackup.mv.db"));
+        FileUtils.copyFile(new File(DB_PATH + ".trace.db"), new File("./resources/data/DatabaseBackup.trace.db"));
     }
 
     /**
@@ -182,24 +173,11 @@ public class DatabaseManager {
      * Se non esiste un database di backup, ritorna errore.
      * Se esiste già un database originale, lo sovrascrive.
      *
-     * @throws SQLException se si verifica un errore durante il ripristino del
+     * @throws IOException se si verifica un errore durante il ripristino del
      *                      database
      */
-    public static void restoreDatabase() throws SQLException {
-        File originalDb = new File(DB_PATH + ".mv.db");
-        File backupDb = new File("./resources/data/DatabaseBackup.mv.db");
-
-        if (!backupDb.exists()) {
-            throw new SQLException("Database di backup non trovato.");
-        }
-
-        try {
-            if (originalDb.exists()) {
-                originalDb.delete();
-            }
-            Files.copy(backupDb.toPath(), originalDb.toPath());
-        } catch (IOException e) {
-            throw new SQLException("Errore durante il ripristino del database dal backup.", e);
-        }
+    public static void restoreDatabase() throws IOException {
+        FileUtils.copyFile(new File("./resources/data/DatabaseBackup.mv.db"), new File(DB_PATH + ".mv.db"));
+        FileUtils.copyFile(new File("./resources/data/DatabaseBackup.trace.db"), new File(DB_PATH + ".trace.db"));
     }
 }
