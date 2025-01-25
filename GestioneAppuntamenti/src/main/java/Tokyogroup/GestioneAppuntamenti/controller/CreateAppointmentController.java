@@ -152,7 +152,7 @@ public class CreateAppointmentController {
      * @param hour Ora selezionata (formato "HH:mm").
      * @return true se la data e l'ora sono valide, false altrimenti.
      */
-    private boolean isDateTimeValid(String date, String hour) {
+    public boolean isDateTimeValid(String date, String hour) {
         try {
             String dateTimeString = date + " " + hour;
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");

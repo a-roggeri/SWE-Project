@@ -1,112 +1,108 @@
-/**
- * Test suite per la classe LoginController, che gestisce
- * le operazioni relative all'autenticazione e gestione degli account utente.
- */
 package Tokyogroup.GestioneAppuntamenti.controller;
-
+import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
+import org.junit.jupiter.api.*;
+import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Classe di test per verificare il corretto funzionamento
- * dei metodi della classe LoginController.
- */
-public class LoginControllerTest {
 
-    private LoginController loginController;
 
-    /**
-     * Metodo eseguito prima di ogni test per configurare l'ambiente di test.
-     * Inizializza un'istanza di LoginController.
-     */
+class LoginControllerTest {
+
+	private LoginController User;
+    private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
+
+    @BeforeAll
+    static void backupDatabase() throws Exception {
+        DatabaseManager.backupDatabase();
+    }
+
     @BeforeEach
-    public void setUp() {
-        loginController = new LoginController();
+    void setUp() throws Exception {
+        DatabaseManager.deleteDatabaseFiles();
+        DatabaseManager.initializeDatabase();
+
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new LoginController();
     }
 
-    /**
-     * Testa il metodo authenticate() per verificare
-     * che l'autenticazione avvenga correttamente con credenziali valide.
-     */
-    @Test
-    public void testAuthenticate_ValidCredentials() {
-        String username = "a"; // Nome utente di esempio
-        String password = "a"; // Password di esempio
-
-        try {
-            User user = loginController.authenticate(username, password);
-            assertNotNull(user, "L'utente autenticato non dovrebbe essere null.");
-            // Aggiungi ulteriori verifiche basate sui dati attesi
-            // assertEquals(expectedUsername, user.getUsername(), "Il nome utente non corrisponde.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    @AfterEach
+    void tearDown() throws Exception {
+        DatabaseManager.restoreDatabase();
     }
 
-    /**
-     * Testa il metodo restoreAccount() per verificare
-     * che un account utente venga ripristinato con successo.
-     */
     @Test
-    public void testRestoreAccount_Successful() {
-        User user = new User();
-        user.setId(1);
-        user.setUsername("testUser"); // Utente di test
-
-        try {
-            boolean result = loginController.restoreAccount(user);
-            assertTrue(result, "L'account dovrebbe essere ripristinato con successo.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    void testAuthenticateSuccess() {
+        User user = User.authenticate("testUser", "password");
+        assertNotNull(user);
+        assertEquals("testUser", user.getUsername());
     }
 
-    /**
-     * Testa il metodo handleSuccessfulLogin() per verificare
-     * che un login valido venga gestito correttamente.
-     */
     @Test
-    public void testHandleSuccessfulLogin() {
-        User user = new User();
-        user.setId(1);
-        user.setUsername("Ere"); // Nome utente di test
-        user.setAccountType("GESTORE"); // Tipo account di test
-
-        try {
-            loginController.handleSuccessfulLogin(user);
-            // Nessuna eccezione dovrebbe essere generata
-        } catch (Exception e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    void testAuthenticateFailure() {
+        User user = User.authenticate("testUser", "wrongPassword");
+        assertNull(user);
     }
 
-    /**
-     * Testa il metodo handleFailedLogin() per verificare
-     * che un login fallito venga gestito correttamente lanciando un'eccezione.
-     */
     @Test
-    public void testHandleFailedLogin() {
-        String username = "testUser"; // Nome utente di esempio
+    void testAuthenticateEmptyUsername() {
+        assertThrows(IllegalArgumentException.class, () -> {
+        	User.authenticate("", "password");
+        });
+    }
 
+    @Test
+    void testAuthenticateEmptyPassword() {
+        assertThrows(IllegalArgumentException.class, () -> {
+        	User.authenticate("testUser", "");
+        });
+    }
+
+    @Test
+    void testRestoreAccountSuccess() throws SQLException {
+        boolean success = User.restoreAccount(testUser);
+        assertTrue(success);
+    }
+
+    @Test
+    void testRestoreAccountFailure() throws SQLException {
+        User nonExistentUser = new User(999, "nonExistentUser", "password", "CLIENTE", true);
+        boolean success = User.restoreAccount(nonExistentUser);
+        assertFalse(success);
+    }
+
+    @Test
+    void testHandleSuccessfulLogin() {
+        assertDoesNotThrow(() -> {
+        	User.handleSuccessfulLogin(testUser);
+        });
+    }
+
+    @Test
+    void testHandleFailedLogin() {
         assertThrows(RuntimeException.class, () -> {
-            loginController.handleFailedLogin(username);
-        }, "Dovrebbe essere lanciata un'eccezione per login fallito.");
+        	User.handleFailedLogin("testUser");
+        });
     }
 
-    /**
-     * Testa il metodo openRegistration() per verificare
-     * che l'operazione di apertura della registrazione non generi eccezioni.
-     */
     @Test
-    public void testOpenRegistration() {
-        try {
-            loginController.openRegistration();
-            // Nessuna eccezione dovrebbe essere generata
-        } catch (Exception e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    void testOpenRegistration() {
+        assertDoesNotThrow(() -> {
+        	User.openRegistration();
+        });
     }
 }

@@ -1,92 +1,83 @@
 package Tokyogroup.GestioneAppuntamenti.controller;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
+import Tokyogroup.GestioneAppuntamenti.model.User;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
+import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.nio.charset.Charset;
-import java.util.Random;
+import java.io.IOException;
 
-/**
- * Classe di test per verificare il corretto funzionamento del controller
- * RegisterController, responsabile della registrazione di nuovi utenti.
- */
-public class RegisterControllerTest {
 
-    private RegisterController registerController;
 
-    /**
-     * Metodo eseguito prima di ogni test per configurare l'ambiente di test.
-     * Inizializza un'istanza del RegisterController.
-     */
+
+class RegisterControllerTest {
+
+	private RegisterController User;
+    private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
+
+    @BeforeAll
+    static void backupDatabase() throws Exception {
+        DatabaseManager.backupDatabase();
+    }
+
     @BeforeEach
-    public void setUp() {
-        // Inizializzazione del controller
-        registerController = new RegisterController();
+    void setUp() throws Exception {
+        DatabaseManager.deleteDatabaseFiles();
+        DatabaseManager.initializeDatabase();
+
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new RegisterController();
     }
 
-    /**
-     * Test per verificare la registrazione di un utente con credenziali valide.
-     * Controlla che il metodo registerUser() restituisca true quando tutti i campi
-     * richiesti sono forniti correttamente.
-     */
-    @Test
-    public void testRegisterUser_Successful() {
-        // Parametri di esempio
-    	// cambiare credenziali ogni test 
-    	byte[] array = new byte[7]; // length is bounded by 7
-        new Random().nextBytes(array);
-        String username = new String(array, Charset.forName("UTF-8"));
-        new Random().nextBytes(array);
-        String password = new String(array, Charset.forName("UTF-8"));
-        String accountType = "CLIENTE";
-        
-
-        try {
-            boolean result = registerController.registerUser(username, password, accountType);
-            assertTrue(result, "L'utente dovrebbe essere registrato con successo.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    @AfterEach
+    void tearDown() throws Exception {
+        DatabaseManager.restoreDatabase();
     }
-    
-    /**
-     * Test per verificare il comportamento del metodo registerUser() quando
-     * vengono forniti campi vuoti. Si aspetta che venga lanciata un'eccezione
-     * IllegalArgumentException.
-     */
-    @Test
-    public void testRegisterUser_EmptyFields() {
-        // Parametri con campi vuoti
-        String username = "";
-        String password = "";
-        String accountType = "CLIENTE";
 
+    @Test
+    void testRegisterUserSuccess() {
+        boolean result = User.registerUser("newuser", "password", "CLIENTE");
+        assertTrue(result);
+    }
+
+    @Test
+    void testRegisterUserWithEmptyFields() {
         assertThrows(IllegalArgumentException.class, () -> {
-            registerController.registerUser(username, password, accountType);
-        }, "Dovrebbe essere lanciata un'eccezione per campi vuoti.");
-    }
-
-    /**
-     * Test per verificare il comportamento del metodo registerUser() quando
-     * vengono forniti campi null. Si aspetta che venga lanciata un'eccezione
-     * IllegalArgumentException.
-     */
-    @Test
-    public void testRegisterUser_NullFields() {
-        // Parametri null
-        String username = null;
-        String password = null;
-        String accountType = "CLIENTE";
-
+        	User.registerUser("", "password", "CLIENTE");
+        });
         assertThrows(IllegalArgumentException.class, () -> {
-            registerController.registerUser(username, password, accountType);
-        }, "Dovrebbe essere lanciata un'eccezione per campi null.");
+        	User.registerUser("newuser", "", "CLIENTE");
+        });
     }
 
+    @Test
+    void testRegisterUserWithNullFields() {
+        assertThrows(IllegalArgumentException.class, () -> {
+        	User.registerUser(null, "password", "CLIENTE");
+        });
+        assertThrows(IllegalArgumentException.class, () -> {
+        	User.registerUser("newuser", null, "CLIENTE");
+        });
+    }
 
-
-
-
+    @Test
+    void testRegisterUserDatabaseError() throws IOException {
+        DatabaseManager.deleteDatabaseFiles();
+        assertThrows(RuntimeException.class, () -> {
+        	User.registerUser("newuser", "password", "CLIENTE");
+        });
+    }
 }

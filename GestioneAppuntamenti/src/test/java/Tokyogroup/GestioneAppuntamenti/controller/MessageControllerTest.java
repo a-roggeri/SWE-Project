@@ -1,72 +1,68 @@
-/**
- * Test suite per la classe MessageController, che gestisce
- * le operazioni relative all'invio e alla gestione dei messaggi tra gli utenti.
- */
 package Tokyogroup.GestioneAppuntamenti.controller;
-
+import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 
+import org.junit.jupiter.api.*;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Classe di test per verificare il corretto funzionamento
- * dei metodi della classe MessageController.
- */
-public class MessageControllerTest {
 
-    private MessageController messageController;
+
+class MessageControllerTest {
+
+	private MessageController User;
     private User testUser;
+    private User testHairdresser;
+    private UserDAO userDAO;
 
-    /**
-     * Metodo eseguito prima di ogni test per configurare l'ambiente di test.
-     * Crea un utente di test e inizializza il MessageController.
-     */
+    @BeforeAll
+    static void backupDatabase() throws Exception {
+        DatabaseManager.backupDatabase();
+    }
+
     @BeforeEach
-    public void setUp() {
-        testUser = new User();
-        testUser.setId(1);
-        testUser.setUsername("test_user");
+    void setUp() throws Exception {
+        DatabaseManager.deleteDatabaseFiles();
+        DatabaseManager.initializeDatabase();
 
-        messageController = new MessageController(testUser);
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new MessageController(testUser);
     }
 
-    /**
-     * Testa il metodo getAllManagers() per verificare
-     * che restituisca una lista valida di gestori.
-     */
-    @Test
-    public void testGetAllManagers() {
-        try {
-            List<User> managers = messageController.getAllManagers();
-            assertNotNull(managers, "La lista dei gestori non dovrebbe essere null.");
-            // Puoi aggiungere ulteriori verifiche, ad esempio:
-            // assertEquals(expectedSize, managers.size(), "La dimensione della lista non è corretta.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    @AfterEach
+    void tearDown() throws Exception {
+        DatabaseManager.restoreDatabase();
     }
 
-    /**
-     * Testa il metodo sendMessage() per verificare
-     * che un messaggio venga inviato con successo.
-     * 
-     * receiverId ID del destinatario.
-     * messageText Testo del messaggio.
-     */
     @Test
-    public void testSendMessage_Successful() {
-        int receiverId = 1; // ID del destinatario di esempio
-        String messageText = "Ciao, questo è un messaggio di prova.";
+    void testGetAllManagers() {
+        List<User> managers = User.getAllManagers();
+        assertNotNull(managers);
+        assertFalse(managers.isEmpty());
+    }
 
-        try {
-            boolean result = messageController.sendMessage(receiverId, messageText);
-            assertTrue(result, "Il messaggio dovrebbe essere inviato con successo.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    @Test
+    void testSendMessageSuccess() {
+        boolean result = User.sendMessage(2, "Test message");
+        assertTrue(result);
+    }
+
+    @Test
+    void testSendMessageFailure() {
+    	assertThrows(Exception.class, () -> {
+            User.sendMessage(999, "Test message"); // Assuming 999 is an invalid ID
+        });
     }
 }

@@ -7,6 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.IOException;
+
 /**
  * Classe per la gestione del database.
  */
@@ -24,7 +28,7 @@ public class DatabaseManager {
     public DatabaseManager() {
         // Costruttore vuoto
     }
-    
+
     /**
      * Ottiene una connessione al database.
      *
@@ -53,7 +57,24 @@ public class DatabaseManager {
                     "Impossibile creare la directory del database in " + directory.getAbsolutePath());
         }
     }
+    /**
+     * Cancella i file del database appointments.
+     * Se i file non esistono, non fa nulla.
+     *
+     * @throws IOException se si verifica un errore durante la cancellazione dei file
+     */
+    public static void deleteDatabaseFiles() throws IOException {
+        File dbFile = new File(DB_PATH + ".mv.db");
+        File traceFile = new File(DB_PATH + ".trace.db");
 
+        if (dbFile.exists() && !dbFile.delete()) {
+            throw new IOException("Impossibile cancellare il file del database: " + dbFile.getAbsolutePath());
+        }
+
+        if (traceFile.exists() && !traceFile.delete()) {
+            throw new IOException("Impossibile cancellare il file di traccia del database: " + traceFile.getAbsolutePath());
+        }
+    }
     /**
      * Inizializza il database creando le tabelle necessarie.
      *
@@ -148,5 +169,50 @@ public class DatabaseManager {
         } catch (SQLException e) {
             throw new SQLException("Errore durante l'aggiornamento degli appuntamenti passati", e);
         }
+    }
+
+    /**
+     * Crea una copia del database attuale chiamandola DatabaseBackup.
+     * Se esiste già un database di backup, lo sovrascrive.
+     * Se non esiste un database originale, ritorna errore.
+     *
+     * @throws IOException se si verifica un errore durante il backup del database
+     */
+    public static void backupDatabase() throws IOException {
+        File originalDb = new File(DB_PATH + ".mv.db");
+        File originalTrace = new File(DB_PATH + ".trace.db");
+        File backupDb = new File("./resources/data/DatabaseBackup.mv.db");
+        File backupTrace = new File("./resources/data/DatabaseBackup.trace.db");
+
+        // Controllo se i file originali esistono
+        if (originalDb.exists()) {
+            FileUtils.copyFile(originalDb, backupDb);
+        }
+        if (originalTrace.exists()) {
+            FileUtils.copyFile(originalTrace, backupTrace);
+        }
+    }
+
+    /**
+     * Sovrascrive il database attuale con il database di backup.
+     * Se non esiste un database di backup, ritorna errore.
+     * Se esiste già un database originale, lo sovrascrive.
+     *
+     * @throws IOException se si verifica un errore durante il ripristino del database
+     */
+    public static void restoreDatabase() throws IOException {
+        File backupDb = new File("./resources/data/DatabaseBackup.mv.db");
+        File backupTrace = new File("./resources/data/DatabaseBackup.trace.db");
+        File originalDb = new File(DB_PATH + ".mv.db");
+        File originalTrace = new File(DB_PATH + ".trace.db");
+
+        // Controllo se i file di backup esistono
+        if (backupDb.exists()) {
+            FileUtils.copyFile(backupDb, originalDb);
+        }
+        if (backupTrace.exists()) {
+            FileUtils.copyFile(backupTrace, originalTrace);
+        }
+
     }
 }

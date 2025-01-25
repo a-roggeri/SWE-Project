@@ -1,65 +1,68 @@
 package Tokyogroup.GestioneAppuntamenti.controller;
-
+import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 
+import org.junit.jupiter.api.*;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Classe di test per verificare il corretto funzionamento del controller 
- * WeeklyAppointmentsController.
- */
-public class WeeklyAppointmentsControllerTest {
 
-    private WeeklyAppointmentsController weeklyAppointmentsController;
+
+class WeeklyAppointmentsControllerTest {
+
+	private AppointmentController User;
+    private WeeklyAppointmentsController Hairdresser;
+    private User testUser;
     private User testHairdresser;
+    private UserDAO userDAO;
 
-    /**
-     * Metodo eseguito prima di ogni test per configurare l'ambiente di test.
-     * Inizializza un oggetto User come parrucchiere di test e un'istanza del controller.
-     */
+    @BeforeAll
+    static void backupDatabase() throws Exception {
+        DatabaseManager.backupDatabase();
+    }
+
     @BeforeEach
-    public void setUp() {
-        // creo un parrucchiere di test
-        testHairdresser = new User();
-        testHairdresser.setId(1);
-        testHairdresser.setUsername("test_hairdresser");
+    void setUp() throws Exception {
+        DatabaseManager.deleteDatabaseFiles();
+        DatabaseManager.initializeDatabase();
 
-        // inizializzo controller
-        weeklyAppointmentsController = new WeeklyAppointmentsController(testHairdresser);
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        User = new AppointmentController(testUser);
+        Hairdresser = new WeeklyAppointmentsController(testHairdresser);
     }
-    
-    /**
-     * Test per verificare il metodo getWeeklyAppointments().
-     * Controlla che la mappa degli appuntamenti settimanali venga restituita 
-     * correttamente e che non sia null.
-     */
-    @Test
-    public void testGetWeeklyAppointments() {
-        try {
-            Map<Integer, List<String[]>> weeklyAppointments = weeklyAppointmentsController.getWeeklyAppointments();
-            assertNotNull(weeklyAppointments, "La mappa degli appuntamenti settimanali non dovrebbe essere null.");
-        } catch (Exception e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        DatabaseManager.restoreDatabase();
     }
-    
-    /**
-     * Test per verificare il metodo calculateWeeklyRevenue().
-     * Controlla che il calcolo del fatturato settimanale restituisca un valore 
-     * maggiore o uguale a zero e che non vengano generate eccezioni.
-     */
+
     @Test
-    public void testCalculateWeeklyRevenue() {
-        try {
-            double revenue = weeklyAppointmentsController.calculateWeeklyRevenue();
-            assertTrue(revenue >= 0, "Il fatturato settimanale dovrebbe essere maggiore o uguale a zero.");
-        } catch (Exception e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    void testGetWeeklyAppointments() {
+    	List<String> selectedServices = List.of("Taglio", "Piega");
+        User.bookAppointment(2, LocalDate.now().getYear() + "-" + LocalDate.now().getMonthValue() + "-" + (LocalDate.now().getDayOfMonth() + 1), "11:00", selectedServices);
+        Map<Integer, List<String[]>> weeklyAppointments = Hairdresser.getWeeklyAppointments();
+        assertNotNull(weeklyAppointments);
+        assertFalse(weeklyAppointments.isEmpty());
+    }
+
+    @Test
+    void testCalculateWeeklyRevenue() {
+        double revenue = Hairdresser.calculateWeeklyRevenue();
+        assertTrue(revenue >= 0);
     }
 }

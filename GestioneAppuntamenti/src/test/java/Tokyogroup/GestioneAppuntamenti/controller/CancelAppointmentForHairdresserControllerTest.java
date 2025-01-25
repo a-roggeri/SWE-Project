@@ -1,71 +1,77 @@
-/**
- * Test suite per la classe CancelAppointmentForHairdresserController,
- * che gestisce la cancellazione degli appuntamenti da parte di un parrucchiere.
- */
 package Tokyogroup.GestioneAppuntamenti.controller;
-
+import Tokyogroup.GestioneAppuntamenti.model.DatabaseManager;
+import Tokyogroup.GestioneAppuntamenti.model.Service;
+import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 
+import org.junit.jupiter.api.*;
 import java.util.List;
 import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Classe di test per verificare il corretto funzionamento
- * dei metodi della classe CancelAppointmentForHairdresserController.
- */
-public class CancelAppointmentForHairdresserControllerTest {
 
-    private CancelAppointmentForHairdresserController cancelAppointmentForHairdresserController;
+
+class CancelAppointmentForHairdresserControllerTest {
+
+    private CancelAppointmentForHairdresserController Hairdresser;
+    private User testUser;
     private User testHairdresser;
+    private UserDAO userDAO;
 
-    /**
-     * Metodo eseguito prima di ogni test per configurare l'ambiente di test.
-     * Crea un parrucchiere di test e inizializza il controller.
-     */
+    @BeforeAll
+    static void backupDatabase() throws Exception {
+        DatabaseManager.backupDatabase();
+    }
+
     @BeforeEach
-    public void setUp() {
-        // Creazione di un parrucchiere di test
-        testHairdresser = new User();
-        testHairdresser.setId(2);
-        testHairdresser.setUsername("test_hairdresser");
+    void setUp() throws Exception {
+        DatabaseManager.deleteDatabaseFiles();
+        DatabaseManager.initializeDatabase();
 
-        // Inizializzazione del controller
-        cancelAppointmentForHairdresserController = new CancelAppointmentForHairdresserController(testHairdresser);
+        testUser = new User(1, "testUser", "password", "CLIENTE", true);
+        testHairdresser = new User(2, "hairdresser", "password", "GESTORE", true);
+        userDAO = UserDAO.getInstance();
+		userDAO.addUser(testUser);
+		userDAO.addUser(testHairdresser);
+        ServiceDAO sDAO = new ServiceDAO();  
+        sDAO.addService(new Service(1, "Taglio", 10));
+        sDAO.addService(new Service(2, "Piega", 12));
+        sDAO.addServiceToHairdresser(2, 1);
+        sDAO.addServiceToHairdresser(2, 2);
+        Hairdresser = new CancelAppointmentForHairdresserController(testHairdresser);
     }
 
-    /**
-     * Testa il metodo getValidAppointmentsForHairdresser() per verificare
-     * che restituisca una lista valida di appuntamenti per il parrucchiere.
-     */
-    @Test
-    public void testGetValidAppointmentsForHairdresser() {
-        try {
-            List<String[]> appointments = cancelAppointmentForHairdresserController.getValidAppointmentsForHairdresser();
-            assertNotNull(appointments, "La lista degli appuntamenti non dovrebbe essere null.");
-            // Verifica basata su un valore atteso (se noto)
-            // assertEquals(expectedSize, appointments.size(), "La dimensione della lista non è corretta.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    @AfterEach
+    void tearDown() throws Exception {
+        DatabaseManager.restoreDatabase();
     }
 
-    /**
-     * Testa il metodo getClientNames() per verificare
-     * che restituisca una mappa valida di nomi dei clienti.
-     */
     @Test
-    public void testGetClientNames() {
-        try {
-            Map<Integer, String> clientNames = cancelAppointmentForHairdresserController.getClientNames();
-            assertNotNull(clientNames, "La mappa dei clienti non dovrebbe essere null.");
-            // Verifica basata su un valore atteso (se noto)
-            // assertTrue(clientNames.containsKey(expectedId), "La mappa non contiene l'ID atteso.");
-        } catch (RuntimeException e) {
-            fail("Non dovrebbe essere generata un'eccezione: " + e.getMessage());
-        }
+    void testGetValidAppointmentsForHairdresser() {
+    	AppointmentController UserTemp;
+        UserTemp =  new AppointmentController(testUser);
+    	List<String> selectedServices = List.of("Taglio", "Piega");
+        UserTemp.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
+        List<String[]> appointments = Hairdresser.getValidAppointmentsForHairdresser();
+        assertNotNull(appointments);
+        assertFalse(appointments.isEmpty());
+    }
+
+    @Test
+    void testGetClientNames() {
+        Map<Integer, String> clientNames = Hairdresser.getClientNames();
+        assertNotNull(clientNames);
+        assertFalse(clientNames.isEmpty());
+    }
+
+    @Test
+    void testCancelAppointment() {
+    	AppointmentController UserTemp;
+        UserTemp =  new AppointmentController(testUser);
+    	List<String> selectedServices = List.of("Taglio", "Piega");
+        UserTemp.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
+        boolean success = Hairdresser.cancelAppointment(1);
+        assertTrue(success);
     }
 }

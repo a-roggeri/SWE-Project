@@ -4,19 +4,19 @@ import Tokyogroup.GestioneAppuntamenti.model.Service;
 import Tokyogroup.GestioneAppuntamenti.model.ServiceDAO;
 import Tokyogroup.GestioneAppuntamenti.model.User;
 import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
-
 import org.junit.jupiter.api.*;
-import java.util.List;
-import java.util.Map;
+
+import java.io.IOException;
+import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
 
 
 
 
-class CancelAppointmentControllerTest {
+class ChangePasswordControllerTest {
 
-	private CancelAppointmentController User;
+	private ChangePasswordController User;
     private User testUser;
     private User testHairdresser;
     private UserDAO userDAO;
@@ -41,7 +41,7 @@ class CancelAppointmentControllerTest {
         sDAO.addService(new Service(2, "Piega", 12));
         sDAO.addServiceToHairdresser(2, 1);
         sDAO.addServiceToHairdresser(2, 2);
-        User = new CancelAppointmentController(testUser);
+        User = new ChangePasswordController(testUser);
     }
 
     @AfterEach
@@ -50,30 +50,24 @@ class CancelAppointmentControllerTest {
     }
 
     @Test
-    void testGetValidAppointmentsForClient() {
-    	AppointmentController UserTemp;
-        UserTemp =  new AppointmentController(testUser);
-    	List<String> selectedServices = List.of("Taglio", "Piega");
-        UserTemp.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
-        List<String[]> appointments = User.getValidAppointmentsForClient();
-        assertNotNull(appointments);
-        assertFalse(appointments.isEmpty());
-    }
-
-    @Test
-    void testGetHairdresserNames() {
-        Map<Integer, String> hairdresserNames = User.getHairdresserNames();
-        assertNotNull(hairdresserNames);
-        assertFalse(hairdresserNames.isEmpty());
-    }
-
-    @Test
-    void testCancelAppointment() {
-        AppointmentController UserTemp;
-        UserTemp =  new AppointmentController(testUser);
-    	List<String> selectedServices = List.of("Taglio", "Piega");
-        UserTemp.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
-        boolean success = User.cancelAppointment(1);
+    void testChangePasswordSuccess() throws SQLException {
+        boolean success = User.changePassword("password", "newPassword");
         assertTrue(success);
+        assertNotNull(userDAO.findUser("testUser", "newPassword"));
+    }
+
+    @Test
+    void testChangePasswordFailure() throws SQLException {
+        boolean success = User.changePassword("wrongOldPassword", "newPassword");
+        assertFalse(success);
+        assertNull(userDAO.findUser("testUser", "newPassword"));
+    }
+
+    @Test
+    void testChangePasswordSQLException() throws SQLException, IOException {
+        DatabaseManager.deleteDatabaseFiles();
+        assertThrows(RuntimeException.class, () -> {
+        	User.changePassword("password", "newPassword");
+        });
     }
 }

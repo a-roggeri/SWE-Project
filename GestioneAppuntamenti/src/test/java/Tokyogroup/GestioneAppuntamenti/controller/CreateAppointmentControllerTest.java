@@ -11,12 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 
+class CreateAppointmentControllerTest {
 
-
-class AppointmentControllerTest {
-
-    private AppointmentController User;
-    private AppointmentController Hairdresser;
+    private CreateAppointmentController Hairdresser;
     private User testUser;
     private User testHairdresser;
     private UserDAO userDAO;
@@ -41,8 +38,7 @@ class AppointmentControllerTest {
         sDAO.addService(new Service(2, "Piega", 12));
         sDAO.addServiceToHairdresser(2, 1);
         sDAO.addServiceToHairdresser(2, 2);
-        User = new AppointmentController(testUser);
-        Hairdresser = new AppointmentController(testHairdresser);
+        Hairdresser = new CreateAppointmentController(testHairdresser);
     }
 
     @AfterEach
@@ -51,43 +47,52 @@ class AppointmentControllerTest {
     }
 
     @Test
-    void testGetCurrentUser() {
-        User currentUser = User.getCurrentUser();
-        assertEquals(testUser, currentUser);
+    void testGetClients() {
+        List<User> clients = Hairdresser.getClients();
+        assertNotNull(clients);
+        assertFalse(clients.isEmpty());
     }
 
     @Test
-    void testGetAvailableHairdressers() {
-        List<User> hairdressers = User.getAvailableHairdressers();
-        assertNotNull(hairdressers);
-        assertFalse(hairdressers.isEmpty());
-    }
-
-    @Test
-    void testGetServicesForHairdresser() {
-        
-        List<Service> services = Hairdresser.getServicesForHairdresser(testHairdresser);
+    void testGetServicesForCurrentHairdresser() {
+        List<Service> services = Hairdresser.getServicesForCurrentHairdresser();
         assertNotNull(services);
         assertFalse(services.isEmpty());
     }
 
     @Test
-    void testGetAvailableHours() {
-        List<String> availableHours = User.getAvailableHours(2, "2025-10-10");
+    void testGetAvailableHoursForDate() {
+        List<String> availableHours = Hairdresser.getAvailableHoursForDate("2025-10-10");
         assertNotNull(availableHours);
         assertFalse(availableHours.isEmpty());
     }
 
     @Test
-    void testBookAppointment() {
+    void testCreateAppointmentSuccess() {
         List<String> selectedServices = List.of("Taglio", "Piega");
-        boolean success = User.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
+        boolean success = Hairdresser.createAppointment(1, "2025-10-10", "10:00", selectedServices);
         assertTrue(success);
     }
 
     @Test
+    void testCreateAppointmentInvalidClientId() {
+        List<String> selectedServices = List.of("Taglio", "Piega");
+        assertThrows(IllegalArgumentException.class, () -> {
+        	Hairdresser.createAppointment(-1, "2025-10-10", "10:00", selectedServices);
+        });
+    }
+
+    @Test
+    void testCreateAppointmentInvalidDateTime() {
+        List<String> selectedServices = List.of("Taglio", "Piega");
+        assertThrows(IllegalArgumentException.class, () -> {
+        	Hairdresser.createAppointment(1, "2020-10-10", "10:00", selectedServices);
+        });
+    }
+
+    @Test
     void testIsDateTimeValid() {
-        assertTrue(User.isDateTimeValid("2025-10-10", "10:00"));
-        assertFalse(User.isDateTimeValid("2020-10-10", "10:00"));
+        assertTrue(Hairdresser.isDateTimeValid("2025-10-10", "10:00"));
+        assertFalse(Hairdresser.isDateTimeValid("2020-10-10", "10:00"));
     }
 }

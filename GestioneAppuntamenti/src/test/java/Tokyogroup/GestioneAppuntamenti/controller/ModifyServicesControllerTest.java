@@ -7,16 +7,13 @@ import Tokyogroup.GestioneAppuntamenti.model.UserDAO;
 
 import org.junit.jupiter.api.*;
 import java.util.List;
-import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 
 
+class ModifyServicesControllerTest {
 
-
-class CancelAppointmentControllerTest {
-
-	private CancelAppointmentController User;
+    private ModifyServicesController Hairdresser;
     private User testUser;
     private User testHairdresser;
     private UserDAO userDAO;
@@ -40,8 +37,7 @@ class CancelAppointmentControllerTest {
         sDAO.addService(new Service(1, "Taglio", 10));
         sDAO.addService(new Service(2, "Piega", 12));
         sDAO.addServiceToHairdresser(2, 1);
-        sDAO.addServiceToHairdresser(2, 2);
-        User = new CancelAppointmentController(testUser);
+        Hairdresser = new ModifyServicesController(testHairdresser);
     }
 
     @AfterEach
@@ -50,30 +46,40 @@ class CancelAppointmentControllerTest {
     }
 
     @Test
-    void testGetValidAppointmentsForClient() {
-    	AppointmentController UserTemp;
-        UserTemp =  new AppointmentController(testUser);
-    	List<String> selectedServices = List.of("Taglio", "Piega");
-        UserTemp.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
-        List<String[]> appointments = User.getValidAppointmentsForClient();
-        assertNotNull(appointments);
-        assertFalse(appointments.isEmpty());
+    void testGetServicesForHairdresser() {
+        List<Service> services = Hairdresser.getServicesForHairdresser();
+        assertNotNull(services);
+        assertFalse(services.isEmpty());
     }
 
     @Test
-    void testGetHairdresserNames() {
-        Map<Integer, String> hairdresserNames = User.getHairdresserNames();
-        assertNotNull(hairdresserNames);
-        assertFalse(hairdresserNames.isEmpty());
+    void testRemoveServiceFromHairdresser() {
+        boolean result = Hairdresser.removeServiceFromHairdresser(1);
+        assertTrue(result);
     }
 
     @Test
-    void testCancelAppointment() {
-        AppointmentController UserTemp;
-        UserTemp =  new AppointmentController(testUser);
-    	List<String> selectedServices = List.of("Taglio", "Piega");
-        UserTemp.bookAppointment(2, "2025-10-10", "11:00", selectedServices);
-        boolean success = User.cancelAppointment(1);
-        assertTrue(success);
+    void testGetAvailableServicesForHairdresser() {
+        List<Service> availableServices = Hairdresser.getAvailableServicesForHairdresser();
+        assertNotNull(availableServices);
+        assertFalse(availableServices.isEmpty());
+    }
+
+    @Test
+    void testAddServiceToHairdresser() {
+        boolean result = Hairdresser.addServiceToHairdresser(2);
+        assertTrue(result);
+    }
+
+    @Test
+    void testAddNewService() {
+        int newServiceId = Hairdresser.addNewService("New Service", 50.0);
+        assertTrue(newServiceId > 0);
+    }
+
+    @Test
+    void testRemoveServiceAndCancelAppointments() {
+        boolean result = Hairdresser.removeServiceAndCancelAppointments(1);
+        assertTrue(result);
     }
 }
