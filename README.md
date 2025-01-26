@@ -30,6 +30,7 @@ Il progetto **Barber Shop** è un'applicazione sviluppata nell'ambito del corso 
 ## Documentazione
 
 Per una descrizione dettagliata delle specifiche tecniche, dei requisiti, del design e delle attività di sviluppo, si prega di consultare il [Project Plan](https://github.com/a-roggeri/SWE-Project/blob/main/Project%20Plan%20(1).docx).
+È possibile trovare l'elenco dei dati fittizzi di riempimento del database nel seguente file [data](https://github.com/a-roggeri/SWE-Project/blob/main/data.md).
 
 ## Come Contribuire
 

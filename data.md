@@ -50,6 +50,7 @@
 |--------------|-------|----------------------------------|
 | Mario Rossi  | 9:00  | Taglio, Piega                    |
 | Luca         | 10:00 | Taglio, Barba, Sopracciglia      |
+| Nicola       | 11:00 | Taglio                           |
 | Michele      | 15:00 | Sopracciglia, Permanente         |
 | Giulio       | 16:00 | Tinta                            |
 | Nicola       | 17:00 | Taglio                           |
