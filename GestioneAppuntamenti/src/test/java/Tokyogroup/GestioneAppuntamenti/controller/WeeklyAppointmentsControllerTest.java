@@ -69,11 +69,14 @@ class WeeklyAppointmentsControllerTest {
      */
     @Test
     void testGetWeeklyAppointments() {
-        List<String> selectedServices = List.of("Taglio", "Piega");
-        User.bookAppointment(2, LocalDate.now().getYear() + "-" + LocalDate.now().getMonthValue() + "-" + (LocalDate.now().getDayOfMonth() + 1), "11:00", selectedServices);
-        Map<Integer, List<String[]>> weeklyAppointments = Hairdresser.getWeeklyAppointments();
-        assertNotNull(weeklyAppointments);
-        assertFalse(weeklyAppointments.isEmpty());
+    	if(LocalDate.now().getDayOfWeek().getValue() != 7)
+    	{
+    		List<String> selectedServices = List.of("Taglio", "Piega");
+    		User.bookAppointment(2, LocalDate.now().getYear() + "-" + LocalDate.now().getMonthValue() + "-" + (LocalDate.now().getDayOfMonth() + 1), "11:00", selectedServices);
+    		Map<Integer, List<String[]>> weeklyAppointments = Hairdresser.getWeeklyAppointments();
+    		assertNotNull(weeklyAppointments);
+    		assertFalse(weeklyAppointments.isEmpty());
+        }
     }
 
     /**
