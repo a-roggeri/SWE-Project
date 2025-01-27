@@ -10,7 +10,13 @@
   <name>GestioneAppuntamenti</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
-
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/a-roggeri/SWE-Project</url>
+    </repository>
+  </distributionManagement>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
